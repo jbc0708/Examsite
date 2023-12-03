@@ -61,9 +61,22 @@ def convertText(origin):
         result += (value+"\\newline ")
     return result
 
-def makeTest(exam):
+def makeTest(exam, exam_info):
+
+    choice_info = {}
+    for i in exam_info:
+        gids = i[0].split(",")
+        rids = i[1].split(",")
+        for gid in gids:
+            if gid in choice_info:
+                choice_info[gid]["cnt_gid"] += 1
+            else:
+                choice_info[gid] = {"cnt_gid": 1, "cnt_rid": 0}
+        for rid in rids:
+            choice_info[rid]["cnt_rid"] += 1
+
     test_exam = []
-    #id, subject, part, qtype, question, qimage, atype, answers, right_index, choice
+    #id, subject, part, qtype, question, qimage, atype, answers, right_index, choice, per
     for i in exam:
         answers = i[7].split("|")
         right_index = i[8]
@@ -78,6 +91,10 @@ def makeTest(exam):
             r_index = answers.index(right_target)
             quest.append(arr[r_index])
         quest.append("")
+        qid = str(i[0])
+        target = choice_info[qid]
+        per = int(target["cnt_rid"]/target["cnt_gid"]*100)
+        quest.append("%s %%"%per)
         test_exam.append(quest)
     return test_exam
 
@@ -110,11 +127,10 @@ if st.session_state.is_logged:
         st.session_state.test_range = test_range
         st.write("문제 출제 범위 - %s" % test_range)
         st.write("총 %s개의 기출문제가 출제됨" % len(data))
-#그림
         #id, subject, part, qtype, question, qimage, atype, answers, right_answer
         current = st.session_state.test_current
         target = data[current]
-        expand = st.expander("문제: %3s / %3s" % (current + 1, len(data)), True)
+        expand = st.expander("문제: %3s / %3s 정답률:  %s" % (current + 1, len(data), target[-1]), True)
         newvalue = convertText(target[4])
         expand.latex(r"%s"%newvalue)
         if len(target[5]) > 0:
@@ -122,14 +138,14 @@ if st.session_state.is_logged:
         answers = target[7]
         if target[6] == "text":
             fix_answers = [ r"$%s$"%answer.replace(" ","\;")  for answer in answers ]
-            index_choice = None if target[-1] == "" else fix_answers.index(target[-1])
+            index_choice = None if target[-2] == "" else fix_answers.index(target[-2])
             choice = expand.radio(" ", fix_answers, index=index_choice, key="radio_%s" % current)
         else:
             expand.write("보기 이미지")
             images = [ "./images/%s"%answer for answer in answers ]
             captions = ["보기1", "보기2", "보기3", "보기4"]
             expand.image(images, width=150, caption=captions)
-            index_choice = None if target[-1] == "" else captions.index(target[-1])
+            index_choice = None if target[-2] == "" else captions.index(target[-2])
             choice = expand.radio(" ", captions, index=index_choice, key="radio_%s" % st.session_state.test_current)
         if choice: st.session_state.test_list[current][-1] = choice
         
@@ -218,9 +234,7 @@ if st.session_state.is_logged:
                         cnt = 40
                     addquery = addquery + " order by random() limit %s" % cnt
                     cu.execute(query+addquery)
-                    print(query + addquery)
-                    exam = cu.fetchall()
-                    db.close()
+                    exam = cu.fetchall()           
                 else:
                     for insubject in parts:
                         addquery = " where subject='%s' order by random() limit 20"% insubject
@@ -228,8 +242,9 @@ if st.session_state.is_logged:
                         data = cu.fetchall()
                         for i in data:
                             exam.append(i)
-                    db.close()
-                exam_list = makeTest(exam)
+                cu.execute("select gids, rids from history where uid=%s"%st.session_state.user_id)
+                exam_info = cu.fetchall()
+                exam_list = makeTest(exam, exam_info)
                 st.session_state.test_list = exam_list
                 st.session_state.test_current = 0
                 st.rerun()
