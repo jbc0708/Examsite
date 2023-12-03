@@ -134,7 +134,9 @@ if st.session_state.is_logged:
         #id, subject, part, qtype, question, qimage, atype, answers, right_answer
         current = st.session_state.test_current
         target = data[current]
-        expand = st.expander("문제: %3s / %3s 정답률:  %s" % (current + 1, len(data), target[-1]), True)
+        title = "문제: %3s / %3s " % (current + 1, len(data))
+        if target[-1] != "": title += " 정답률: %s" % target[-1]
+        expand = st.expander(title, True)
         newvalue = convertText(target[4])
         expand.latex(r"%s"%newvalue)
         if len(target[5]) > 0:
