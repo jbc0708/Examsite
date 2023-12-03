@@ -78,3 +78,11 @@ if st.session_state.is_logged:
 else:
     st.subheader("해당 페이지는 로그인 후 이용 가능합니다.")
     st.subheader("왼쪽에 로그인 메뉴를 클릭 후 해당 페이지에서 로그인을 진행 부탁드립니다.")
+
+hide_st_Style = """
+<style>
+    #MainMenu{visibility: hidden;}
+    footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_st_Style, unsafe_allow_html=True)

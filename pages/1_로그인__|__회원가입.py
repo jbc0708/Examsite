@@ -102,6 +102,7 @@ with col4:
 if st.session_state.user_rerun:
     st.session_state.user_rerun = False
     st.rerun()
+    
 user_select = st.session_state.user_select
 match user_select:
     case "login":
@@ -222,3 +223,12 @@ match user_select:
                         st.session_state.user_rank = None
         else:
             st.subheader("해당 메뉴는 로그인 후 사용 가능합니다.")
+
+
+hide_st_Style = """
+<style>
+    #MainMenu{visibility: hidden;}
+    footer {visibility: hidden;}
+</style>
+"""
+st.markdown(hide_st_Style, unsafe_allow_html=True)
