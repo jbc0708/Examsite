@@ -77,6 +77,7 @@ def makeTest(exam, exam_info):
 
     test_exam = []
     #id, subject, part, qtype, question, qimage, atype, answers, right_index, choice, per
+
     for i in exam:
         answers = i[7].split("|")
         right_index = i[8]
@@ -91,10 +92,13 @@ def makeTest(exam, exam_info):
             r_index = answers.index(right_target)
             quest.append(arr[r_index])
         quest.append("")
-        qid = str(i[0])
-        target = choice_info[qid]
-        per = int(target["cnt_rid"]/target["cnt_gid"]*100)
-        quest.append("%s %%"%per)
+        q_id = str(i[0])
+        if (q_id in list(choice_info.keys())):
+            target = choice_info[q_id]
+            per = int(target["cnt_rid"]/target["cnt_gid"]*100)
+            quest.append("%s %%"%per)
+        else:
+            quest.append("")
         test_exam.append(quest)
     return test_exam
 
