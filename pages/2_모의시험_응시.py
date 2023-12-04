@@ -72,25 +72,28 @@ def makeTest(exam, exam_info):
                 choice_info[gid]["cnt_gid"] += 1
             else:
                 choice_info[gid] = {"cnt_gid": 1, "cnt_rid": 0}
-        for rid in rids:
-            choice_info[rid]["cnt_rid"] += 1
+        print(rids)
+        if rids != [""]:
+            for rid in rids:
+                choice_info[rid]["cnt_rid"] += 1
 
     test_exam = []
     #id, subject, part, qtype, question, qimage, atype, answers, right_index, choice, per
 
     for i in exam:
         answers = i[7].split("|")
-        right_index = i[8]
-        right_target = answers[right_index]
+        right_index_before = i[8]
+        right_target = answers[right_index_before]
         random.shuffle(answers)
+      
         quest =  list(i[:7])
         quest.append(answers)
         if i[6] == 'text':
             quest.append(right_target)
         else:
             arr = ['보기1', '보기2', '보기3', '보기4']
-            r_index = answers.index(right_target)
-            quest.append(arr[r_index])
+            quest.append(arr[answers.index(right_target)])
+
         quest.append("")
         q_id = str(i[0])
         if (q_id in list(choice_info.keys())):
@@ -153,7 +156,7 @@ if st.session_state.is_logged:
             expand.image(images, width=150, caption=captions)
             index_choice = None if target[-2] == "" else captions.index(target[-2])
             choice = expand.radio(" ", captions, index=index_choice, key="radio_%s" % st.session_state.test_current)
-        if choice: st.session_state.test_list[current][-1] = choice
+        if choice: st.session_state.test_list[current][-2] = choice
         
         col1, col2, col3 = st.columns([2,2,11])
 
@@ -183,7 +186,9 @@ if st.session_state.is_logged:
                         for i in range(len(data)):
                             info = data[i]
                             gids.append(info[0])
-                            if info[-2] == info[-1]: rids.append(info[0])
+                            fixanswer = info[-2].replace("\;", " ").replace("$", "")
+                            print(i+1, info[-3], fixanswer)
+                            if fixanswer == info[-3]: rids.append(info[0])
                         db = sqlite3.connect("data.db")
                         cu = db.cursor()
                         uid = st.session_state.user_id
